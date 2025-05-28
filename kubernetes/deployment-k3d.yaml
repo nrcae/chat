@@ -1,0 +1,35 @@
+# deployment-k3d.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-k3d-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot-k3s
+  template:
+    metadata:
+      labels:
+        app: chatbot-k3s
+    spec:
+      containers:
+      - name: chatbot-container
+        image: chatbot-k3s-app:latest
+        imagePullPolicy: IfNotPresent
+        stdin: true
+        tty: true
+        volumeMounts:
+        - name: model-storage-k3d
+          mountPath: "/app/model"
+        resources:
+          limits:
+            memory: "10Gi"
+            cpu: "2"
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+      volumes:
+      - name: model-storage-k3d
+        persistentVolumeClaim:
+          claimName: chatbot-model-pvc-k3d

@@ -1,0 +1,28 @@
+# pv-pvc-k3d.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: chatbot-model-pv-k3d
+  labels:
+    type: local-k3d-model
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/k3d_model_volume"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chatbot-model-pvc-k3d
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 15Gi
