@@ -21,7 +21,7 @@ def run_minimal_chatbot(
     chat_format='mistral-instruct'
 ):
     if n_threads is None:
-        n_threads = os.cpu_count()  # Use all available CPU threads by default
+        n_threads = os.cpu_count()
 
     try:
         # Load the language model
@@ -50,12 +50,17 @@ def run_minimal_chatbot(
             if user_input.lower() in ['exit', 'quit']:
                 print("AI Chatbot: Goodbye!")
                 break
-            
-            if not user_input: # Handle empty input
+            elif user_input.lower() == '/clear':
+                conversation = [conversation.copy()]
+                print("AI Chatbot: Conversation cleared. How can I help you now?")
                 continue
+            elif not user_input:
+                continue
+
             # Estimate token usage and trim old messages if context is too long
             total_chars = sum(len(msg["content"]) for msg in conversation)
             estimated_tokens = total_chars // 4
+
             while estimated_tokens > (n_ctx - max_tokens_response - 100) and len(conversation) > 3:
                 conversation.pop(1)  # Remove oldest user message
                 if len(conversation) > 1:
