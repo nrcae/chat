@@ -6,6 +6,8 @@
   vars:
     k8s_manifest_path: "../kubernetes"
     k3d_cluster_name: "chatbot-k3s-cluster"
+    app_label_selector: "app=chatbot-k3s"
+    app_namespace: "default"
 
   tasks:
     - name: "Check if K3d cluster '{{ k3d_cluster_name }}' is running"
@@ -25,3 +27,33 @@
       kubernetes.core.k8s:
         state: present
         src: "{{ k8s_manifest_path }}/deployment-k3d.yaml"
+
+    - name: Wait for chatbot deployment to be available (briefly)
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: chatbot-k3d-deployment
+        namespace: "{{ app_namespace }}"
+      register: deployment_status
+      until: "deployment_status.resources | list | length > 0 and deployment_status.resources[0].status.availableReplicas is defined and deployment_status.resources[0].status.availableReplicas >= 1"
+      retries: 12
+      delay: 5
+      tags: [postflight, health_check]
+
+    - name: Verify at least one chatbot pod is running
+      kubernetes.core.k8s_info:
+        kind: Pod
+        namespace: "{{ app_namespace }}"
+        label_selectors:
+          - "{{ app_label_selector }}"
+      register: pod_status
+      tags: [postflight, health_check]
+
+    - name: Assert that chatbot pods are running
+      ansible.builtin.assert:
+        that:
+          - "pod_status.resources | list | length > 0"
+          - "pod_status.resources[0].status.phase == 'Running'"
+        fail_msg: "Chatbot pod check failed. No pods found or not in Running state with label '{{ app_label_selector }}'."
+        success_msg: "Chatbot pod(s) found and at least one is Running."
+      tags: [postflight, health_check]
