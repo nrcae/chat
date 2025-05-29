@@ -1,0 +1,18 @@
+# ansible/deploy_chatbot.yml
+- hosts: localhost
+  connection: local # Assuming Ansible is run from the same machine where K3d and kubeconfig is set up
+  gather_facts: no
+
+  vars:
+    k8s_manifest_path: "../kubernetes"
+
+  tasks:
+    - name: Apply PersistentVolume and PersistentVolumeClaim
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ k8s_manifest_path }}/pv-pvc-k3d.yaml"
+
+    - name: Apply Chatbot Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ k8s_manifest_path }}/deployment-k3d.yaml"

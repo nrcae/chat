@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chatbot-k3d-deployment
+  namespace: default
 spec:
   replicas: 1
   selector:
