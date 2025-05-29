@@ -5,8 +5,17 @@
 
   vars:
     k8s_manifest_path: "../kubernetes"
+    k3d_cluster_name: "chatbot-k3s-cluster"
 
   tasks:
+    - name: "Check if K3d cluster '{{ k3d_cluster_name }}' is running"
+      ansible.builtin.command:
+        cmd: "k3d cluster get {{ k3d_cluster_name }}"
+      register: k3d_cluster_status
+      changed_when: false
+      failed_when: k3d_cluster_status.rc != 0
+      tags: [preflight, k3d_check]
+
     - name: Apply PersistentVolume and PersistentVolumeClaim
       kubernetes.core.k8s:
         state: present
