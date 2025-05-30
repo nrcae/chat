@@ -63,12 +63,19 @@ def run_minimal_chatbot(
             # Estimate token usage and trim old messages if context is too long
             total_chars = sum(len(msg["content"]) for msg in conversation)
             estimated_tokens = total_chars // 4
-            while estimated_tokens > (n_ctx - max_tokens_response - 100) and len(conversation) > 2:
+            max_context_tokens = n_ctx - max_tokens_response - 100
+            while estimated_tokens > max_context_tokens and len(conversation) > 2:
+                # Remove user message
+                removed_chars = len(conversation[1]["content"])
                 conversation.pop(1)
+
+                # Remove assistant message if present
                 if len(conversation) > 1 and conversation[1]["role"] == "assistant":
+                    removed_chars += len(conversation[1]["content"])
                     conversation.pop(1)
-                total_chars = sum(len(msg["content"]) for msg in conversation)
-                estimated_tokens = total_chars // 4
+                
+                # Update incrementally
+                estimated_tokens -= removed_chars // 4
 
             print("AI Chatbot: ", end="", flush=True)
 
@@ -81,13 +88,13 @@ def run_minimal_chatbot(
 
             ai_reply_parts = []
             for chunk in response_stream:
-                content_piece = None
+                content = None
                 if chunk and 'choices' in chunk and chunk['choices']:
                     delta = chunk['choices'][0].get('delta', {})
-                    content_piece = delta.get('content')
-                if content_piece:
-                    print(content_piece, end="", flush=True)
-                    ai_reply_parts.append(content_piece)
+                    content = delta.get('content')
+                if content:
+                    print(content, end="", flush=True)
+                    ai_reply_parts.append(content)
 
             print()
             ai_reply = "".join(ai_reply_parts)
