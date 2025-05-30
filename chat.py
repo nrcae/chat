@@ -1,6 +1,7 @@
 import llama_cpp
 import os
 import argparse
+import sys
 
 INITIAL_SYSTEM_PROMPT = {"role": "system", "content": "You are a helpful AI assistant."}
 
@@ -41,11 +42,11 @@ def run_minimal_chatbot(
     print(f"AI Chatbot: Hey! What can I do for you? (Type 'exit', 'quit' to cancel, or '/clear' to reset conversation)")
 
     conversation = [INITIAL_SYSTEM_PROMPT.copy()]
+    max_context_tokens = n_ctx - max_tokens_response - 100
 
     while True:
         try:
             user_input = input("You: ").strip()
-
             if not user_input:
                 print("AI Chatbot: Please type a message or command.")
                 continue
@@ -63,7 +64,6 @@ def run_minimal_chatbot(
             # Estimate token usage and trim old messages if context is too long
             total_chars = sum(len(msg["content"]) for msg in conversation)
             estimated_tokens = total_chars // 4
-            max_context_tokens = n_ctx - max_tokens_response - 100
             while estimated_tokens > max_context_tokens and len(conversation) > 2:
                 # Remove user message
                 removed_chars = len(conversation[1]["content"])
@@ -78,7 +78,6 @@ def run_minimal_chatbot(
                 estimated_tokens -= removed_chars // 4
 
             print("AI Chatbot: ", end="", flush=True)
-
             # Generate a response from the model using streaming
             response_stream = llm.create_chat_completion(
                 messages=conversation,
@@ -128,6 +127,9 @@ if __name__ == "__main__":
     parser.add_argument("--chat-format", type=str, default='mistral-instruct', help="Chat format string for LlamaCPP")
 
     args = parser.parse_args()
+    if args.n_ctx <= args.max_tokens_response + 100:
+        print(f"ERROR: Context size ({args.n_ctx}) must be larger than max_tokens_response + 100 ({args.max_tokens_response + 100})")
+        sys.exit(1)
 
     run_minimal_chatbot(
         model_path=args.model_path,
