@@ -43,10 +43,12 @@ def run_minimal_chatbot(
 
     conversation = [INITIAL_SYSTEM_PROMPT.copy()]
     max_context_tokens = n_ctx - max_tokens_response - 100
+    last_user_message_content = None
 
     while True:
         try:
             user_input = input("You: ").strip()
+            user_input_for_processing = None
             if not user_input:
                 print("AI Chatbot: Please type a message or command.")
                 continue
@@ -56,6 +58,7 @@ def run_minimal_chatbot(
                 break
             elif user_input.lower() == '/clear':
                 conversation = [INITIAL_SYSTEM_PROMPT.copy()]
+                last_user_message_content = None
                 print("AI Chatbot: Conversation cleared. How can I help you now?")
                 continue
             elif user_input.lower() == '/help':
@@ -64,6 +67,7 @@ def run_minimal_chatbot(
                 print("  /status         - Shows the current chatbot parameters.")
                 print("  /help           - Shows this help message.")
                 print("  exit / quit     - Exits the chatbot.")
+                print("  /retry          - Resends the last message for a new response.")
                 continue
             elif user_input.lower() == '/status':
                 print("AI Chatbot: Current Parameters:")
@@ -74,8 +78,23 @@ def run_minimal_chatbot(
                 print(f"  Max Response Tokens: {max_tokens_response}")
                 print(f"  Chat Format:       {chat_format}")
                 continue
+            elif user_input.lower() == '/retry':
+                if last_user_message_content:
+                    print(f"AI Chatbot: Retrying your last message: \"{last_user_message_content}\"")
+                    user_input_for_processing = last_user_message_content
+                    # Logic to ensure the message to retry is correctly in the conversation history
+                    if not conversation or conversation[-1]["role"] != "user" or conversation[-1]["content"] != last_user_message_content:
+                        if conversation and conversation[-1]["role"] == "assistant":
+                            conversation.pop()
+                        if not (conversation and conversation[-1]["role"] == "user" and conversation[-1]["content"] == last_user_message_content):
+                            conversation.append({"role": "user", "content": last_user_message_content})
+                else:
+                    user_input_for_processing = user_input
+                    last_user_message_content = user_input_for_processing
+                    print("AI Chatbot: No previous message to retry.")
+                    continue
 
-            conversation.append({"role": "user", "content": user_input})
+            conversation.append({"role": "user", "content": user_input_for_processing})
 
             # Estimate token usage and trim old messages if context is too long
             total_chars = sum(len(msg["content"]) for msg in conversation)
