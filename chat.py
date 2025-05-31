@@ -39,7 +39,7 @@ def run_minimal_chatbot(
         print("CRITICAL: Assure that the model exists and the path is correct. Chatbot will not start.")
         return # Exit if model loading fails
 
-    print(f"AI Chatbot: Hey! What can I do for you? (Type 'exit', 'quit' to cancel, or '/clear' to reset conversation)")
+    print(f"AI Chatbot: Hey! What can I do for you? (Type 'exit', 'quit' to cancel, '/clear' or 'help')")
 
     conversation = [INITIAL_SYSTEM_PROMPT.copy()]
     max_context_tokens = n_ctx - max_tokens_response - 100
@@ -57,6 +57,22 @@ def run_minimal_chatbot(
             elif user_input.lower() == '/clear':
                 conversation = [INITIAL_SYSTEM_PROMPT.copy()]
                 print("AI Chatbot: Conversation cleared. How can I help you now?")
+                continue
+            elif user_input.lower() == '/help':
+                print("AI Chatbot: Available commands:")
+                print("  /clear          - Clears the conversation history.")
+                print("  /status         - Shows the current chatbot parameters.")
+                print("  /help           - Shows this help message.")
+                print("  exit / quit     - Exits the chatbot.")
+                continue
+            elif user_input.lower() == '/status':
+                print("AI Chatbot: Current Parameters:")
+                print(f"  Model Path:        {model_path}")
+                print(f"  Context Size (n_ctx): {n_ctx}")
+                print(f"  GPU Layers (n_gpu_layers): {n_gpu_layers}")
+                print(f"  CPU Threads (n_threads): {n_threads}")
+                print(f"  Max Response Tokens: {max_tokens_response}")
+                print(f"  Chat Format:       {chat_format}")
                 continue
 
             conversation.append({"role": "user", "content": user_input})
@@ -111,7 +127,7 @@ def run_minimal_chatbot(
             break
         except Exception as e:
             print(f"\nERROR: An error occurred during interaction: {type(e).__name__}: {e}")
-            print("AI Chatbot: Sorry, I faced an issue. Let's try again or type 'exit' or '/clear'.")
+            print("AI Chatbot: Sorry, I faced an issue. Let's try again or type 'exit', '/clear' or '/help'.")
             # Avoid getting stuck with problematic user message
             if conversation and conversation[-1]["role"] == "user":
                  conversation.pop() # Remove last user message to prevent re-sending a potentially problematic one
