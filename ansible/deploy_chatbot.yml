@@ -40,17 +40,15 @@
       tags: [postflight, health_check]
 
     - name: Verify {{ deployment_name }} pods are running
-      kubernetes.core.k8s_info:
-        kind: Pod
-        namespace: default
-      register: pod_status
-      tags: [postflight, health_check]
-
-    - name: Assert {{ deployment_name }} pods are running
-      ansible.builtin.assert:
-        that:
-          - "pod_status.resources | list | length > 0"
-          - "pod_status.resources[0].status.phase == 'Running'"
-        fail_msg: "Chatbot pod check failed. No pods found or not in Running state'."
-        success_msg: "Chatbot pod(s) found and at least one is Running."
+      block:
+        - kubernetes.core.k8s_info:
+            kind: Pod
+            namespace: default
+            register: pod_status
+        - ansible.builtin.assert:
+            that:
+              - "pod_status.resources | list | length > 0"
+              - "pod_status.resources[0].status.phase == 'Running'"
+            fail_msg: "Chatbot pod check failed. No pods found or not in Running state'."
+            success_msg: "Chatbot pod(s) found and at least one is Running."
       tags: [postflight, health_check]
