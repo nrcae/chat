@@ -6,7 +6,7 @@ metadata:
   labels:
     type: local-k3d-model
 spec:
-  storageClassName: manual
+  storageClassName: manual-k3d
   capacity:
     storage: 15Gi
   accessModes:
@@ -21,11 +21,10 @@ metadata:
   name: chatbot-model-pvc-k3d
   namespace: default
 spec:
-  storageClassName: manual
+  storageClassName: manual-k3d
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
   volumeName: chatbot-model-pv-k3d
-  storageClassName: manual-k3d

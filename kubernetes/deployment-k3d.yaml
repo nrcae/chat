@@ -30,6 +30,16 @@ spec:
           requests:
             memory: "4Gi"
             cpu: "1"
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /tmp/chat_ready
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+          successThreshold: 1
       volumes:
       - name: model-storage-k3d
         persistentVolumeClaim:

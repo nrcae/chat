@@ -33,11 +33,14 @@ def run_minimal_chatbot(
             chat_format=chat_format
         )
         print(f"Model '{model_path}' loaded successfully.")
+        # Flag kubernetes readiness
+        with open("/tmp/chat_ready", "w") as f:
+            f.write("ready")
 
     except Exception as e:
         print(f"CRITICAL: Error upon loading the model '{model_path}': {e}")
         print("CRITICAL: Assure that the model exists and the path is correct. Chatbot will not start.")
-        return # Exit if model loading fails
+        return
 
     print(f"AI Chatbot: Hey! What can I do for you? (Type 'exit', 'quit' to cancel, '/clear' or 'help')")
 
