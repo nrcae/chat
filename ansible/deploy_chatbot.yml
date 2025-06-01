@@ -29,6 +29,13 @@
         state: present
         src: "{{ k8s_manifest_path }}/deployment-k3d.yaml"
 
+    - name: Apply HorizontalPodAutoscaler for {{ deployment_name }}
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ k8s_manifest_path }}/hpa.yaml"
+        namespace: default
+      tags: [kubernetes, scaling, hpa]
+
     - name: Wait for chatbot {{ deployment_name }} to be ready
       kubernetes.core.k8s_info:
         api_version: apps/v1
