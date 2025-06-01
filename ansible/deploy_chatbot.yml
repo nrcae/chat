@@ -17,24 +17,12 @@
       failed_when: k3d_cluster_status.rc != 0
       tags: [preflight, k3d_check]
 
-    - name: Apply PersistentVolume and PersistentVolumeClaim
+    - name: Apply PersistentVolumes, {{ deployment_name }} and HorizontalPodAutoscaler
       kubernetes.core.k8s:
         state: present
-        src: "{{ k8s_manifest_path }}/pv-pvc-k3d.yaml"
-      tags: [kubernetes, k3d_check ]
-
-    - name: Apply {{ deployment_name }}
-      kubernetes.core.k8s:
-        state: present
-        src: "{{ k8s_manifest_path }}/deployment-k3d.yaml"
-      tags: [kubernetes, k3d_check]
-
-    - name: Apply HorizontalPodAutoscaler for {{ deployment_name }}
-      kubernetes.core.k8s:
-        state: present
-        src: "{{ k8s_manifest_path }}/hpa.yaml"
-        namespace: default
-      tags: [kubernetes, scaling, hpa]
+        src: "{{ item }}"
+      loop: "{{ lookup('fileglob', k8s_manifest_path + '/*.yaml', wantlist=True) }}"
+      tags: [k3d_check, apply, hpa]
 
     - name: Wait for chatbot {{ deployment_name }} to be ready
       kubernetes.core.k8s_info:
